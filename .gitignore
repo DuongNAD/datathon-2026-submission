@@ -2,12 +2,36 @@
 # Datathon 2026 — .gitignore
 # ============================================
 
-# Python
+# ===== RAW COMPETITION DATA (not allowed to share) =====
+# Root-level CSVs (raw data from Kaggle)
+/*.csv
+!sample_submission.csv
+
+# Data_Analysis extracted CSVs
+Data_Analysis/
+
+# Analysis intermediate CSVs
+Analysis/*.csv
+
+# ===== KEEP ONLY ESSENTIAL CSVs =====
+# train_model/dataset/ has the train/test splits
+# train_model/submission_v6.csv is the final submission
+# Nop_bai/submission.csv is the copy for submission
+
+# ===== Old model versions =====
+train_model/model_v5/
+train_model/model/
+train_model/model_v6/lgbm_*.txt
+train_model/submission.csv
+train_model/submission_v5.csv
+Nop_bai/submission_v5.csv
+
+# ===== Python =====
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# LaTeX temp files
+# ===== LaTeX temp files =====
 *.aux
 *.log
 *.out
@@ -16,28 +40,21 @@ __pycache__/
 *.fdb_latexmk
 *.toc
 
-# IDE
+# ===== IDE =====
 .idea/
 .vscode/
 *.swp
 
-# OS
+# ===== OS =====
 Thumbs.db
 .DS_Store
 
-# Large model binaries (reproducible via train_v6.py)
-train_model/model_v6/lgbm_*.txt
-train_model/model_v5/
-train_model/model/
-
-# Old versions & intermediate files
+# ===== Duplicate/Old/Junk in Nop_bai =====
 Nop_bai/source_code/
 Nop_bai/Images.zip
 Nop_bai/Chart_*.csv
 Nop_bai/Chung_minh_*.csv
 Nop_bai/*.html
-
-# Duplicate PNGs at Nop_bai root (canonical copies are in Nop_bai/Images/)
 Nop_bai/2_Inventory_Risk_Analysis.png
 Nop_bai/4a_Revenue_Yearly.png
 Nop_bai/4b_Revenue_Monthly.png
@@ -48,17 +65,19 @@ Nop_bai/5c_Installment_Behavior.png
 Nop_bai/Story_*.png
 Nop_bai/image.png
 Nop_bai/shap_summary.*
+Nop_bai/Images/shap_*v5*
 
-# Temp/utility scripts
+# ===== Temp/utility scripts =====
 check_data.py
 fix_width.py
 prepare_notebooklm.py
 split_data.py
 
-# Competition exam paper (should not be public)
+# ===== Competition exam (must not be public) =====
 Nop_bai/*thi*.pdf
+Nop_bai/_de_thi*
 
-# Intermediate analysis folders
+# ===== Intermediate folders =====
 For_NotebookLM/
 Path1/
 Path2/
