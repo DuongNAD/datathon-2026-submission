@@ -1,65 +1,78 @@
-# 🏆 Datathon 2026 — The Gridbreakers (Vòng 1)
+# Datathon 2026 — Vong 1 | The Gridbreakers
 
-> **Dự báo Doanh thu & Giá vốn hàng bán** cho doanh nghiệp thời trang e-commerce Việt Nam.  
-> Cuộc thi tổ chức bởi VinTelligence — VinUniversity DS&AI Club.
+**De tai:** Du bao Doanh thu va Gia von hang ban cho doanh nghiep thoi trang e-commerce Viet Nam.  
+**Cuoc thi:** To chuc boi VinTelligence — VinUniversity DS&AI Club.
 
 ---
 
-## ⚡ Quick Start — Tái Lập Kết Quả
+## Huong Dan Tai Lap Ket Qua
+
+Toan bo pipeline co the duoc tai lap bang 3 dong lenh sau:
 
 ```bash
 cd train_model
 pip install -r requirements.txt
 python scripts/train_v6.py
+```
+
+Kiem tra rang buoc de bai:
+
+```bash
 python scripts/check_constraints.py
 ```
 
 ---
 
-## 📁 Cấu Trúc Thư Mục
+## Cau Truc Thu Muc
 
 ```
 datathon-2026-round-1/
 │
-├── train_model/                    # 🔥 Pipeline ML chính
+├── train_model/                        Pipeline hoc may chinh
 │   ├── scripts/
-│   │   ├── train_v6.py             #   Pipeline: Feature Eng → LightGBM → SHAP
-│   │   ├── check_constraints.py    #   Kiểm tra ràng buộc đề thi
-│   │   └── evaluate.py             #   Đánh giá mô hình
+│   │   ├── train_v6.py                     Feature Engineering + LightGBM + SHAP
+│   │   ├── check_constraints.py            Kiem tra rang buoc de thi (10 tieu chi)
+│   │   └── evaluate.py                     Danh gia mo hinh tren tap validation
 │   ├── dataset/
-│   │   ├── sales_train.csv         #   Train: 2012-2022 (3,833 ngày)
-│   │   └── sales_test.csv          #   Test: 2023-2024 (548 ngày)
-│   ├── model_v6/                   #   SHAP plots + metrics (model binaries excluded)
-│   ├── requirements.txt            #   Thư viện pinned versions
-│   ├── submission_v6.csv           #   File nộp Kaggle
-│   └── README.md                   #   Chi tiết kỹ thuật
+│   │   ├── sales_train.csv                 Du lieu huan luyen: 2012-2022
+│   │   └── sales_test.csv                  Du lieu kiem thu: 2023-2024
+│   ├── model_v6/                           SHAP plots, metrics, feature list
+│   ├── requirements.txt                    Thu vien kem phien ban cu the
+│   └── submission_v6.csv                   Ket qua du bao cuoi cung
 │
-├── Nop_bai/                        # 📄 Tài liệu nộp bài
-│   ├── NeurIPS_Report.tex          #   Báo cáo LaTeX (NeurIPS template, 4 trang)
-│   ├── NeurIPS_Report.pdf          #   PDF compiled
-│   ├── submission.csv              #   File nộp Kaggle (copy từ v6)
-│   ├── Images/                     #   36 biểu đồ EDA + SHAP
-│   └── Bao_Cao_Chien_Luoc_*.md     #   Báo cáo chiến lược đầy đủ
+├── Nop_bai/                            Tai lieu nop bai
+│   ├── NeurIPS_Report.tex                  Bao cao ky thuat (NeurIPS template, 4 trang)
+│   ├── NeurIPS_Report.pdf                  Ban PDF da compile
+│   ├── submission.csv                      File nop len Kaggle
+│   ├── Images/                             36 bieu do EDA va SHAP
+│   └── Bao_Cao_Chien_Luoc_*.md             Bao cao chien luoc toan dien
 │
-├── analysis_*.py                   # Scripts phân tích EDA
-├── baseline.ipynb                  # Notebook khám phá dữ liệu
-└── README.md                       # File này
+├── Analysis/                           Scripts phan tich EDA
+├── baseline.ipynb                      Notebook kham pha du lieu
+└── README.md                           File nay
 ```
 
 ---
 
-## 📊 Hiệu Suất Mô Hình (v6)
+## Hieu Suat Mo Hinh
 
-| Metric | Giá trị |
+Mo hinh LightGBM Ensemble (5 seeds) duoc danh gia tren tap hold-out 18 thang (07/2021 - 12/2022):
+
+| Chi so | Gia tri |
 |--------|:-------:|
-| **R²** | 0.7978 |
-| **MAE** | 531,042 |
-| **MAPE** | 21.1% |
+| R-squared | 0.7978 |
+| MAE | 531,042 |
+| RMSE | 698,857 |
+| MAPE | 21.1% |
 
-**Kiến trúc:** LightGBM Ensemble (5 seeds) + Log-transform + 40 known-in-advance features + SHAP TreeExplainer.
+**Kien truc:** LightGBM GBDT voi log-transform, ensemble 5 random seeds, 40 dac trung "known-in-advance", ket hop SHAP TreeExplainer de giai thich ket qua du bao.
+
+**Chong ro ri du lieu:** Toan bo dac trung chi su dung thong tin co the biet truoc tai thoi diem du bao. Bien khuyen mai bi loai bo hoan toan. Lag features chi truy xuat tu tap huan luyen.
 
 ---
 
-## 🔗 Links
+## Tai Lieu Tham Khao
 
-- **Kaggle:** [datathon-2026-round-1](https://www.kaggle.com/competitions/datathon-2026-round-1)
+1. Ke, G., et al. "LightGBM: A Highly Efficient Gradient Boosting Decision Tree." NeurIPS, 2017.
+2. Lundberg, S. M. & Lee, S.-I. "A Unified Approach to Interpreting Model Predictions (SHAP)." NeurIPS, 2017.
+3. VinTelligence. "De thi Datathon 2026 — Vong 1." 2026.
