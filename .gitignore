@@ -2,19 +2,6 @@
 # Datathon 2026 — .gitignore
 # ============================================
 
-# Large data files (judges can download from Kaggle)
-*.csv
-!sample_submission.csv
-!train_model/dataset/sales_train.csv
-!train_model/dataset/sales_test.csv
-!train_model/submission_v6.csv
-!Nop_bai/submission.csv
-
-# LightGBM model binaries (too large, can be reproduced)
-train_model/model_v6/lgbm_*.txt
-train_model/model_v5/
-train_model/model/
-
 # Python
 __pycache__/
 *.pyc
@@ -38,12 +25,38 @@ __pycache__/
 Thumbs.db
 .DS_Store
 
-# Old versions & temp
-Nop_bai/submission_v5.csv
+# Large model binaries (reproducible via train_v6.py)
+train_model/model_v6/lgbm_*.txt
+train_model/model_v5/
+train_model/model/
+
+# Old versions & intermediate files
 Nop_bai/source_code/
 Nop_bai/Images.zip
 Nop_bai/Chart_*.csv
 Nop_bai/Chung_minh_*.csv
+Nop_bai/*.html
+
+# Duplicate PNGs at Nop_bai root (canonical copies are in Nop_bai/Images/)
+Nop_bai/2_Inventory_Risk_Analysis.png
+Nop_bai/4a_Revenue_Yearly.png
+Nop_bai/4b_Revenue_Monthly.png
+Nop_bai/5_Payment_Behavior.png
+Nop_bai/5a_Device_Behavior.png
+Nop_bai/5b_Payment_Methods.png
+Nop_bai/5c_Installment_Behavior.png
+Nop_bai/Story_*.png
+Nop_bai/image.png
+Nop_bai/shap_summary.*
+
+# Temp/utility scripts
+check_data.py
+fix_width.py
+prepare_notebooklm.py
+split_data.py
+
+# Competition exam paper (should not be public)
+Nop_bai/*thi*.pdf
 
 # Intermediate analysis folders
 For_NotebookLM/
