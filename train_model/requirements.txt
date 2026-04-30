@@ -1,0 +1,15 @@
+# =============================================================
+# Datathon 2026 — The Gridbreakers
+# Forecasting Pipeline Dependencies (pinned versions)
+# =============================================================
+# Install: pip install -r requirements.txt
+# =============================================================
+
+lightgbm==4.6.0
+shap==0.51.0
+holidays==0.95
+pandas==2.3.3
+numpy==2.3.5
+scikit-learn==1.8.0
+matplotlib==3.10.8
+joblib==1.5.3

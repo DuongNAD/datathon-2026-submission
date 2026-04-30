@@ -1,0 +1,251 @@
+% ============================================================
+% DATATHON 2026 — The Gridbreakers
+% NeurIPS-style Report (4 pages + references/appendix)
+% ============================================================
+\documentclass{article}
+
+% --- NeurIPS 2025 compatible packages ---
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese,english]{babel}
+\usepackage{times}  % NeurIPS uses Times font
+
+% NeurIPS page layout (replicate official margins)
+\usepackage[a4paper, left=1.5in, right=1.5in, top=1in, bottom=1in]{geometry}
+\usepackage[numbers]{natbib}
+\usepackage{setspace}
+
+% Graphics and tables
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage[usenames,dvipsnames]{xcolor}
+
+% Math and code
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% --- Compact spacing for 4-page limit ---
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+\setlength{\textfloatsep}{6pt}
+\setlength{\floatsep}{4pt}
+\setlength{\intextsep}{4pt}
+
+\title{\textbf{Multivariate Optimization of Demand \& Supply:}\\
+\textbf{A Data-Driven Approach to Profitability Recovery}\\[4pt]
+\large Datathon 2026 — Round 1 Report}
+
+\author{
+  \textbf{The Gridbreakers}\\
+  Datathon 2026 Contestant Team\\[4pt]
+  {\small \url{https://github.com/the-gridbreakers/datathon-2026-submission}}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% ============================================================
+\begin{abstract}
+\noindent
+Phân tích 10 năm dữ liệu giao dịch (2012--2022) của một doanh nghiệp thời trang e-commerce Việt Nam, chúng tôi phát hiện 4 điểm nghẽn chiến lược: (1) \textbf{Bẫy lợi nhuận} — biên lợi nhuận sụp đổ chu kỳ tại Tháng 8 năm lẻ ($-35\%$) và Tháng 12 ($1\text{--}2\%$); (2) \textbf{Nghịch lý Khuyến mãi} — mã giảm giá bào mòn AOV $20.5\%$ thay vì kích cầu; (3) \textbf{Nghẽn cổ chai Mobile} — tỷ lệ bỏ giỏ hàng $68.5\%$ trên thiết bị di động; (4) \textbf{Nghịch lý Market-Fit} — hàng Outdoor tồn kho $80\%$ dù rating 4--5 sao. Hệ thống dự báo LightGBM Ensemble (5 seeds $\times$ 40 features) đạt $R^2 = 0.80$ và $\text{MAPE} = 21.1\%$ trên tập hold-out 18 tháng. SHAP analysis xác nhận quán tính ngắn hạn và chu kỳ thường niên là trụ cột dự báo. Chiến lược 5 trụ cột kỳ vọng khôi phục Gross Margin về $+20\%$, phục hồi AOV lên 27.500 VNĐ, và giảm $50\%$ tồn kho Outdoor trong 6 tháng.
+\end{abstract}
+
+% ============================================================
+\section{Phần 2 — Trực Quan Hóa \& Phân Tích EDA}
+% ============================================================
+
+\subsection{Bức Tranh Doanh Thu \& Chu Kỳ Thị Trường}
+
+Dữ liệu 3.833 ngày giao dịch cho thấy vòng đời doanh nghiệp trải qua 3 giai đoạn: \textbf{Bứt phá} (2013--2016, đỉnh 2.1 tỷ VNĐ), \textbf{Thoái trào} (2019--2021, chạm đáy 1.0 tỷ), và \textbf{Phục hồi cấu trúc} (2022, AOV đạt kỷ lục 32.400 VNĐ). Streetwear chiếm lĩnh $83.9\%$ thị phần năm 2022, khẳng định vị thế \textit{Cash Cow} tuyệt đối.
+
+\textbf{Tính mùa vụ:} Quý 2 (Tháng 4--6) luôn là đỉnh doanh thu nhờ hiệu ứng cộng hưởng bộ sưu tập Xuân/Hè và Mid-Year Sale. Bộ ba GenZ ($+90.6\%$), Streetwear ($+72.4\%$), Casual ($+70.4\%$) dẫn dắt tăng trưởng Q2.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/4a_Revenue_Yearly.png}
+    \includegraphics[width=0.48\textwidth]{Images/4b_Revenue_Monthly.png}
+    \caption{(Trái) Xu hướng doanh thu 2013--2022, 3 giai đoạn rõ rệt. (Phải) Đỉnh doanh thu Quý 2.}
+    \label{fig:revenue}
+\end{figure}
+
+\subsection{Khủng Hoảng Biên Lợi Nhuận — ``The Profit Trap''}
+
+Hai ``hố đen'' lợi nhuận được phát hiện qua phân tích Gross Margin:
+
+\begin{itemize}
+    \setlength{\itemsep}{1pt}
+    \item \textbf{Tháng 8 năm lẻ:} Voucher trợ giá cố định (50 VNĐ) gây bùng nổ chi phí gấp 10$\times$, đẩy Gross Margin xuống $-35\%$.
+    \item \textbf{Tháng 12:} Chiến dịch ``sale chồng sale'' nén biên lợi nhuận xuống $1\text{--}2\%$ dù doanh thu bùng nổ.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/6a_Gross_Margin_Trend.png}
+    \includegraphics[width=0.48\textwidth]{Images/6b_Gross_Margin_Seasonality.png}
+    \caption{(Trái) Suy giảm biên lợi nhuận dài hạn. (Phải) Chu kỳ khủng hoảng mùa vụ — T8 \& T12.}
+    \label{fig:margin}
+\end{figure}
+
+\subsection{Nghịch Lý Khuyến Mãi \& Điểm Nghẽn Mobile}
+
+\textbf{Promotion Paradox:} Đơn hàng áp mã giảm giá ($38.4\%$ tổng đơn) có AOV thấp hơn $20.5\%$ so với đơn nguyên giá (21.914 vs 27.565 VNĐ). Kiểm toán 6 chiến dịch cho thấy 5/6 chiến dịch lỗ ròng, đỉnh điểm Urban Blowout: $-62.5\%$ biên lợi nhuận.
+
+\textbf{Mobile Friction:} Kênh di động dẫn đầu lưu lượng ($45.1\%$) nhưng tỷ lệ bỏ giỏ hàng lên tới $68.5\%$. Thời lượng lưu trang trung bình 160s chứng minh ý định mua sắm rõ ràng — điểm nghẽn UX tại bước thanh toán.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/7b_Promotion_AOV.png}
+    \includegraphics[width=0.48\textwidth]{Images/5a_Device_Composite.png}
+    \caption{(Trái) AOV sụt giảm khi có khuyến mãi. (Phải) Mobile: traffic cao nhất, rớt đơn nhiều nhất.}
+    \label{fig:promo_mobile}
+\end{figure}
+
+\subsection{Chuỗi Cung Ứng \& Nghịch Lý Market-Fit}
+
+Outdoor chiếm chỉ $9\%$ doanh thu nhưng Overstock Rate lên tới $80\%$, Sell-through Rate chạm đáy $14\%$. Network Graph Analysis nhận diện 3 SKU deadstock (MekongFit RS-10, HanoiStreet YY-04, UrbanVN RS-04) — paradox: rating 4--5 sao, return rate $\approx 0$, nhưng Degree Centrality cực thấp (0.02--0.05). Kết luận: \textit{Product-Market Mismatch}, không phải lỗi chất lượng.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/Story_1_Quadrant_Scatter.png}
+    \includegraphics[width=0.48\textwidth]{Images/9b_Inventory_Sales_Velocity.png}
+    \caption{(Trái) Ma trận hiệu suất sản phẩm. (Phải) Tốc độ bán vs Tồn kho — Outdoor lệch pha.}
+    \label{fig:inventory}
+\end{figure}
+
+% ============================================================
+\section{Phần 3 — Mô Hình Dự Báo Doanh Thu}
+% ============================================================
+
+\subsection{Pipeline \& Feature Engineering}
+
+\textbf{Kiến trúc:} LightGBM GBDT với target transform $\log(1+\text{Revenue})$. Ensemble 5 seeds $\times$ 2 models (Revenue + Gross Margin\%). COGS được suy ra: $\text{COGS} = \text{Revenue} \times (1 - \text{GM\%})$.
+
+\textbf{40 features ``Known-in-Advance'':}
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textit{Lag đa tầng} (8 biến): \texttt{lag\_1} ($r=0.87$), \texttt{lag\_7}, \texttt{lag\_30}, \texttt{lag\_364}, \texttt{lag\_365} ($r=0.79$), rolling mean 7d/30d, Tet-aligned lag.
+    \item \textit{Lịch \& Fourier} (20 biến): Calendar features + biến đổi Fourier bậc 1--4 biểu diễn mùa vụ dạng sóng liên tục.
+    \item \textit{Sự kiện} (7 biến): Khoảng cách đến Tết Nguyên Đán, ngày lễ, Mega Sale dates, COVID lockdown flag.
+    \item \textit{Cuối tháng} (2 biến): \texttt{is\_month\_end\_zone}, \texttt{days\_to\_month\_end} — nắm bắt hiện tượng dồn đơn (tăng $70\%$).
+\end{itemize}
+
+\textbf{Anti-leakage:} Revenue/COGS test không bao giờ xuất hiện trong features. Lag features chỉ truy xuất từ train set. Promotions bị loại bỏ hoàn toàn (thuộc cấp giao dịch, không biết trước). COVID lockdown periods được giảm trọng số (weight=$0.3$).
+
+\textbf{Validation:} Hold-out temporal split — train đến 30/06/2021, validation từ 01/07/2021 đến 31/12/2022 (549 ngày). Không random split.
+
+\subsection{Kết Quả Thực Nghiệm}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Hiệu suất mô hình v6 trên tập hold-out 18 tháng}
+\label{tab:metrics}
+\begin{tabular}{lccl}
+\toprule
+\textbf{Chỉ số} & \textbf{Giá trị} & \textbf{Giai đoạn} & \textbf{Ý nghĩa} \\
+\midrule
+$R^2$ & 0.7978 & Toàn bộ val & Giải thích $80\%$ biến động doanh thu \\
+MAE & 531,042 & Toàn bộ val & Sai lệch trung bình $\sim$531K VNĐ/ngày \\
+RMSE & 698,857 & Toàn bộ val & Phạt nặng các dự báo lệch lớn \\
+MAPE & 21.1\% & Toàn bộ val & Biên độ sai lệch $\sim$21\% \\
+\midrule
+$R^2$ & 0.64 & 2H/2021 & Bền bỉ qua giai đoạn COVID nhiễu \\
+$R^2$ & 0.80 & 2022 & Hiệu suất bật tăng mạnh \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Sanity checks:} 0 giá trị âm Revenue, 0 vi phạm COGS $>$ Revenue, dự báo 2023--2024 tăng trưởng $+11.1\%$ (hợp lý với xu hướng phục hồi 2022).
+
+\subsection{Giải Thích Mô Hình — SHAP Analysis}
+
+SHAP TreeExplainer trên tập validation đúc kết 3 quy luật thị trường:
+
+\begin{enumerate}
+    \setlength{\itemsep}{1pt}
+    \item \textbf{Quán tính ngắn hạn chi phối:} \texttt{revenue\_lag\_1} (mean $|\text{SHAP}| = 0.306$) vượt trội gấp $5\times$ biến thứ hai — doanh thu hôm nay phản ánh đà tăng trưởng ngày liền trước.
+    \item \textbf{Chu kỳ thường niên ổn định:} \texttt{lag\_365} và \texttt{lag\_364} ở vị trí 2--3, xác nhận tính lặp lại bám sát cùng kỳ năm trước.
+    \item \textbf{Hiệu ứng dồn đơn cuối tháng:} \texttt{days\_to\_month\_end} trong top-5, minh chứng hành vi dồn KPI/hóa đơn cuối kỳ.
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/shap_summary_v6.png}
+    \includegraphics[width=0.48\textwidth]{Images/shap_bar_v6.png}
+    \caption{(Trái) SHAP Beeswarm Plot — phân bổ tác động. (Phải) SHAP Bar — mức độ quan trọng.}
+    \label{fig:shap}
+\end{figure}
+
+% ============================================================
+\section{Chiến Lược Thực Thi \& Kết Luận}
+% ============================================================
+
+Để giải quyết 4 điểm nghẽn, chúng tôi đề xuất 5 trụ cột hành động:
+
+\begin{enumerate}
+    \setlength{\itemsep}{2pt}
+    \item \textbf{Tái cấu trúc Khuyến mãi:} Loại bỏ mã giảm giá \% độc lập, triển khai Cross-selling: ``Mua 1 Streetwear nguyên giá — Được mua Outdoor giảm $70\%$''. Sử dụng sức nóng Cash Cow để thanh lý tồn kho.
+    \item \textbf{Tối ưu Mobile Checkout:} Tái thiết kế luồng thanh toán di động, tích hợp BNPL (Mua trước trả sau) ngay tại trang sản phẩm — phá rào cản tâm lý giá mà không cắt giảm biên lợi nhuận.
+    \item \textbf{Tái phân bổ vốn:} Đóng băng thu mua 3 SKU deadstock, chuyển $100\%$ dòng tiền sang bổ sung hàng Streetwear.
+    \item \textbf{Chuyển dịch tiếp thị:} Cắt giảm quảng cáo trả phí tại thị trường bão hòa (HN/HCM), dịch chuyển sang nhóm 25--44 tuổi tại thị trường Cấp 2 (Cẩm Phả, Thái Nguyên) qua SEO/Email.
+    \item \textbf{Kiểm soát chất lượng:} Chuẩn hóa hình ảnh sản phẩm, kiểm định kép cho danh mục có tỷ lệ đánh giá tiêu cực cao.
+\end{enumerate}
+
+\textbf{KPI mục tiêu (Q1--Q2/2023):} Gross Margin về $+20\%$, AOV phục hồi 27.500 VNĐ ($+25\%$), Outdoor Overstock $80\% \rightarrow 40\%$, Mobile Cart Abandonment $< 40\%$.
+
+\textbf{Tái lập kết quả:} Toàn bộ mã nguồn, dữ liệu, và hướng dẫn chạy (\texttt{pip install -r requirements.txt \&\& python scripts/train\_v6.py}) được công khai tại: \url{https://github.com/the-gridbreakers/datathon-2026-submission}. Random seeds cố định: $[42, 123, 777, 2026, 314]$.
+
+% ============================================================
+% REFERENCES (không tính vào 4 trang)
+% ============================================================
+\newpage
+\section*{Tài liệu tham khảo}
+
+\begin{enumerate}
+    \setlength{\itemsep}{2pt}
+    \item Ke, G., et al. ``LightGBM: A Highly Efficient Gradient Boosting Decision Tree.'' \textit{NeurIPS}, 2017.
+    \item Lundberg, S. M. \& Lee, S.-I. ``A Unified Approach to Interpreting Model Predictions (SHAP).'' \textit{NeurIPS}, 2017.
+    \item VinTelligence — VinUniversity DS\&AI Club. ``Đề thi Datathon 2026 — Vòng 1: The Gridbreakers.'' 2026.
+\end{enumerate}
+
+% ============================================================
+% APPENDIX (không tính vào 4 trang)
+% ============================================================
+\section*{Phụ lục}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/10a_Cohort_Heatmap.png}
+    \includegraphics[width=0.48\textwidth]{Images/10b_Pareto_Chart.png}
+    \caption{(Trái) Cohort Heatmap — tỷ lệ giữ chân sụt mạnh Năm 0 $\rightarrow$ Năm 1. (Phải) Pareto — Top $40\%$ KH đóng góp $80\%$ tổng đơn.}
+    \label{fig:appendix1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/10c_Sankey_Diagram.png}
+    \includegraphics[width=0.48\textwidth]{Images/8_Customer_Tier_Behavior.png}
+    \caption{(Trái) Sankey — luồng hành trình khách hàng. (Phải) Chênh lệch AOV giữa phân tầng — VIP $9\%$ chi phối dòng tiền.}
+    \label{fig:appendix2}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.48\textwidth]{Images/11a_Market_Penetration_Region.png}
+    \includegraphics[width=0.48\textwidth]{Images/11c_CLV_Heatmap_Age_Channel.png}
+    \caption{(Trái) Market Penetration theo khu vực. (Phải) CLV Heatmap: Nhóm Tuổi $\times$ Kênh Marketing.}
+    \label{fig:appendix3}
+\end{figure}
+
+\end{document}

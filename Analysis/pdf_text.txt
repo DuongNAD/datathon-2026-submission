@@ -1,0 +1,64 @@
+BÁO CÁO CHIẾN LƯỢC SẢN PHẨM & CHUỖI CUNG ỨNG
+1. PHƯƠNG PHÁP LUẬN VÀ CƠ SỞ TÍNH TOÁN
+Để đưa ra các quyết định về chuỗi cung ứng, báo cáo dựa trên sự đối soát giữa Hiệu suất Tài chính và Rủi ro Vận hành
+thông qua các công thức cốt lõi:
+- Lợi nhuận đơn vị = Giá bán - Giá vốn (COGS)
+- Tổng lợi nhuận = Số lượng bán x Lợi nhuận đơn vị
+- Tỷ lệ bán ra (Sell-through Rate) = Số lượng bán / (Số lượng bán + Tồn kho)
+- Tỷ lệ Overstock = Tần suất hàng bị thừa so với dự báo nhu cầu.
+2. THEO DÕI BIẾN ĐỘNG HÀNG HÓA CHI TIẾT THEO NĂM (TRACKING)
+Bảng dưới đây theo dõi biến động Nhập - Bán - Tồn của các danh mục chính. Dữ liệu cho thấy sự tích tụ hàng tồn kho
+lớn từ sau năm 2018, đặc biệt là nhóm Streetwear và Outdoor.
+year category Bán Ra Nhập Kho Tồn Kho
+2,012.0 Casual 813.0 935.0 3,330.0
+2,012.0 GenZ 1,757.0 2,050.0 8,935.0
+2,012.0 Outdoor 25,125.0 29,680.0 63,857.0
+2,012.0 Streetwear 20,729.0 24,302.0 93,495.0
+2,013.0 Casual 2,032.0 2,338.0 9,084.0
+2,013.0 GenZ 4,481.0 5,228.0 23,758.0
+2,013.0 Outdoor 53,268.0 62,842.0 224,986.0
+2,013.0 Streetwear 54,398.0 63,797.0 269,075.0
+2,014.0 Casual 2,241.0 2,579.0 13,044.0
+2,014.0 GenZ 4,656.0 5,446.0 33,782.0
+2,014.0 Outdoor 52,219.0 61,547.0 342,245.0
+2,014.0 Streetwear 58,311.0 68,714.0 370,357.0
+2,015.0 Casual 2,864.0 3,316.0 17,480.0
+2,015.0 GenZ 5,517.0 6,389.0 43,042.0
+2,015.0 Outdoor 48,977.0 57,667.0 412,047.0
+2,015.0 Streetwear 62,747.0 73,797.0 467,868.0
+2,016.0 Casual 3,414.0 3,972.0 23,363.0
+2,016.0 GenZ 5,291.0 6,135.0 51,113.0
+2,016.0 Outdoor 42,569.0 49,925.0 471,063.0
+BÁO CÁO CHIẾN LƯỢC SẢN PHẨM & CHUỖI CUNG ỨNG
+2,016.0 Streetwear 66,692.0 78,657.0 552,380.0
+3. PHÂN TÍCH LỢI NHUẬN (PROFITABILITY ANALYSIS)
+Căn cứ vào dữ liệu, chúng ta xác định được danh mục Streetwear đóng vai trò là 'trụ cột' lợi nhuận. Phân khúc
+Everyday và Balanced đóng góp hơn 80% tổng dòng tiền.
+category Lợi Nhuận Sản Lượng
+Streetwear 808,056,608.3 511,467.0
+Outdoor 167,444,316.0 337,510.0
+GenZ 24,294,500.1 48,695.0
+Casual 22,492,849.6 31,202.0
+4. PHÂN TÍCH RỦI RO TỒN KHO (INVENTORY RISK)
+Phân tích rủi ro chỉ ra rằng Outdoor là nhóm rủi ro nhất với Tỷ lệ tồn vượt mức (Overstock) cao nhất nhưng Tỷ lệ bán ra
+thấp nhất. Điều này gây ra tình trạng 'giam vốn' nặng nề.
+category Hết hàng(TB) Tỷ lệ Over Tỷ lệ Bán ra
+Outdoor 1.1 0.8 0.1
+Streetwear 1.2 0.7 0.2
+Casual 1.1 0.7 0.2
+GenZ 1.1 0.7 0.2
+BÁO CÁO CHIẾN LƯỢC SẢN PHẨM & CHUỖI CUNG ỨNG
+5. ĐỀ XUẤT NGỪNG KINH DOANH VÀ GIẢI PHÁP CHIẾN LƯỢC
+Dựa trên 'Ma trận Yếu kém' (Lợi nhuận thuộc nhóm 10% đáy và Tỷ lệ Overstock > 50%), chúng ta đề xuất loại bỏ 10
+sản phẩm sau để thu hồi vốn lưu động:
+ID Tên SP Lợi nhuận Tỷ lệ Over
+1,122.0 MekongFit RS-10 1,125.3 1.0
+1,003.0 HanoiStreet YY-04 1,246.6 0.9
+1,985.0 UrbanVN RS-04 1,920.9 0.9
+CÁC GIẢI PHÁP TỐI ƯU CỤ THỂ:
+1. GIẢI PHÁP XẢ KHO (LIQUIDATION): Áp dụng chiến dịch Bundle (Bia kèm lạc). Tặng kèm các sản phẩm Outdoor tồn
+kho cao (>80%) cho khách hàng mua Streetwear hot. Mục tiêu là giải phóng không gian kho ngay lập tức.
+2. TỐI ƯU SỐ NGÀY TỒN: Chuyển dịch từ nhập hàng khối lượng lớn sang mô hình dự báo theo tuần. Mục tiêu đưa tỷ
+lệ Sell-through Rate lên mức 30-40% thay vì 15% như hiện tại.
+3. ĐIỀU TIẾT DÒNG VỐN: Ngừng nhập mới 100% đối với danh sách đề xuất ở trên. Dồn nguồn vốn giải phóng được
+để nhập thêm các mã Streetwear - Balanced đang có sức mua tốt.
