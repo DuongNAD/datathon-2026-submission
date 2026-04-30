@@ -508,5 +508,5 @@ Cohort Analysis chia khách hàng theo **năm gia nhập** và theo dõi tỷ l�
 ---
 
 ### Nguồn Dữ Liệu & Mã Nguồn Bổ Sung
-1. **Hệ thống Pipeline:** Toàn bộ mã nguồn (*Feature Engineering*, *LightGBM v5*) và Hệ thống kiểm định được công khai tại GitHub của đội thi The Gridbreakers: `https://github.com/the-gridbreakers/datathon-2026-submission`
+1. **Hệ thống Pipeline:** Toàn bộ mã nguồn (*Feature Engineering*, *LightGBM v6*) và Hệ thống kiểm định được công khai tại GitHub: `https://github.com/DuongNAD/datathon-2026-submission`
 2. **Báo cáo Đa biến:** Khám phá thêm các phân tích sâu về sự bào mòn lợi nhuận của khuyến mãi tại file `/Nop_bai/Bao_Cao_Phan_Tich_Da_Bien.md` trong Repository.
