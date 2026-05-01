@@ -22,13 +22,26 @@ Random seeds cố định: `[42, 123, 777]` — đảm bảo kết quả giống
 
 ## Hiệu Suất Mô Hình
 
-| Mô hình | RMSE (Public LB) | Ghi chú |
-|---------|:-----------------:|---------|
-| Naive Baseline (DOY mean) | > 900K | Không có trend correction |
-| LightGBM đơn — V37 | 780K | 1 seed, 1 loss function |
-| **V55 Hybrid Ensemble** | **740,764** | **Best — 18 models × trend multiplier** |
-| V58 Deep Trees | 743K | Overfitting do deeper leaves |
-| V60 Ridge Hybrid | 769K | Trend ngoại suy sai do structural break |
+### Top Models (Public Leaderboard)
+
+| Rank | Model | RMSE | Multiplier | Mô tả |
+|:----:|-------|:----:|:----------:|-------|
+| 1 | **V55 Ensemble** | **740,764** | 1.28 | 18 models (LGB+XGB+CatBoost+RF) × 3 seeds, blend 90/10 |
+| 2 | V55 Fine-tune | ~741K | 1.275–1.285 | Grid search quanh điểm tối ưu |
+| 3 | V62 Precision | ~741K | 1.278 | Smearing correction + COGS ensemble 18 models |
+| 4 | V58 Deep Trees | 743K | 1.28 | 127 leaves — overfitting nhẹ |
+| 5 | V56 Titan | ~750K | 1.28 | Thêm growth features — noise do structural break |
+| 6 | V60 Ridge Hybrid | 769K | 1.28 | Ridge trend ngoại suy sai |
+| 7 | V37 Nova | 780K | 1.19 | LightGBM đơn, 1 seed |
+| 8 | V54 Pinnacle | ~800K | 1.20 | Ensemble trước khi tìm ra m=1.28 |
+| — | Naive Baseline | > 900K | — | DOY mean, không trend correction |
+
+### Best Submissions (Nộp Kaggle)
+
+| File | Chiến lược | Dùng cho |
+|------|-----------|----------|
+| `submission_v55_m128.csv` | Best confirmed RMSE = 740,764 | **Final submission chính** |
+| `submission_v62_fine_1278.csv` | Hedge multiplier thấp hơn, COGS ensemble mới | Submission dự phòng |
 
 ---
 
