@@ -1,78 +1,154 @@
-# Datathon 2026 — Vong 1 | The Gridbreakers
+# 🏆 Datathon 2026 — Vòng 1 | The Gridbreakers
 
-**De tai:** Du bao Doanh thu va Gia von hang ban cho doanh nghiep thoi trang e-commerce Viet Nam.  
-**Cuoc thi:** To chuc boi VinTelligence — VinUniversity DS&AI Club.
+**Đề tài:** Dự báo Doanh thu (Revenue) và Giá vốn hàng bán (COGS) cho doanh nghiệp thời trang e-commerce Việt Nam.  
+**Cuộc thi:** Tổ chức bởi VinTelligence — VinUniversity DS&AI Club.  
+**Kết quả:** 🥇 **Public Leaderboard RMSE = 740,764**
 
 ---
 
-## Huong Dan Tai Lap Ket Qua
+## 🚀 Hướng Dẫn Tái Lập Kết Quả
 
-Toan bo pipeline co the duoc tai lap bang 3 dong lenh sau:
+Toàn bộ pipeline có thể tái lập 100% bằng 3 dòng lệnh:
 
 ```bash
 cd train_model
 pip install -r requirements.txt
-python scripts/train_v6.py
+python scripts/train_v55_ultimate.py
 ```
 
-Kiem tra rang buoc de bai:
-
-```bash
-python scripts/check_constraints.py
-```
+Random seeds cố định: `[42, 123, 777]` — đảm bảo kết quả giống hệt mỗi lần chạy.
 
 ---
 
-## Cau Truc Thu Muc
+## 📊 Hiệu Suất Mô Hình
+
+| Mô hình | RMSE (Public LB) | Ghi chú |
+|---------|:-----------------:|---------|
+| Naive Baseline (DOY mean) | > 900K | Không có trend correction |
+| LightGBM đơn — V37 | 780K | 1 seed, 1 loss function |
+| **V55 Hybrid Ensemble** | **740,764** | **🏆 Best — 18 models × trend multiplier** |
+| V58 Deep Trees | 743K | Overfitting do deeper leaves |
+| V60 Ridge Hybrid | 769K | Trend ngoại suy sai do structural break |
+
+---
+
+## 🏗️ Kiến Trúc Mô Hình — V55 Hybrid Ensemble
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    INPUT: 41 Features                   │
+│  Fourier (16) + Lags (10) + Seasonal Mean (4) + Cal(11)│
+└──────────────────────┬──────────────────────────────────┘
+                       │
+         ┌─────────────┼─────────────┐
+         ▼             ▼             ▼
+   ┌──────────┐  ┌──────────┐  ┌──────────┐
+   │ Seed 42  │  │ Seed 123 │  │ Seed 777 │
+   │ 6 models │  │ 6 models │  │ 6 models │
+   └────┬─────┘  └────┬─────┘  └────┬─────┘
+        └──────────────┼─────────────┘
+                       ▼
+              Weighted Average (18 models)
+         LGB(25%) + XGB(25%) + CatBoost(30%)
+              + RandomForest(10%) + MAE(10%)
+                       │
+                       ▼
+           ┌───────────────────────┐
+           │  Hybrid Blending      │
+           │  90% ML + 10% Naive   │
+           └───────────┬───────────┘
+                       │
+                       ▼
+           ┌───────────────────────┐
+           │  Trend Multiplier     │
+           │  α = 1.28             │
+           └───────────┬───────────┘
+                       │
+                       ▼
+              Final Revenue Prediction
+```
+
+**Công thức dự báo:**
+
+```
+Revenue_t = 1.28 × [ 0.9 × expm1(ŷ_ML) + 0.1 × ŷ_Naive ]
+COGS_t   = Revenue_t × clip(COGS_Ratio, 0.65, 0.95)
+```
+
+### 6 Loại Base Model
+
+| # | Model | Loss | Weight | Rounds |
+|---|-------|------|:------:|:------:|
+| 1 | LightGBM | RMSE | 25% | 800 |
+| 2 | LightGBM | MAE | 10% | 800 |
+| 3 | XGBoost | MSE | 25% | 800 |
+| 4 | CatBoost | RMSE | 20% | 800 |
+| 5 | CatBoost | MAE | 10% | 800 |
+| 6 | Random Forest | — | 10% | 400 trees |
+
+### 41 Features (Thuần Thời Gian)
+
+- **Fourier Transforms (16):** Chu kỳ 365.25 ngày (bậc 1–4), 30.5 ngày (bậc 1–2), 7 ngày (bậc 1–2)
+- **Lag đa tầng (10):** DOY-aligned (365, 730) + DOW-aligned (364, 728) + COGS lags
+- **Seasonal Mean (4):** Trung bình Revenue theo `dayofyear`, `weekofyear`, tháng, thứ
+- **Calendar & Events (11):** `time_idx`, `is_payday`, `is_double_day`, `is_month_end`, `is_weekend`, interactions
+
+### Anti-Leakage
+
+- ✅ Revenue/COGS test **không bao giờ** xuất hiện trong features
+- ✅ Lag features chỉ truy xuất từ train set
+- ✅ Sample weights: `w = exp(-0.15 × (2023 - year))` — ưu tiên gần nhưng giữ seasonal dài hạn
+- ✅ Không dùng dữ liệu ngoài (chỉ `sales_train.csv`)
+
+---
+
+## 📁 Cấu Trúc Thư Mục
 
 ```
 datathon-2026-round-1/
 │
-├── train_model/                        Pipeline hoc may chinh
+├── train_model/                        Pipeline học máy chính
 │   ├── scripts/
-│   │   ├── train_v6.py                     Feature Engineering + LightGBM + SHAP
-│   │   ├── check_constraints.py            Kiem tra rang buoc de thi (10 tieu chi)
-│   │   └── evaluate.py                     Danh gia mo hinh tren tap validation
+│   │   ├── train_v55_ultimate.py          🏆 Best model — Hybrid Ensemble
+│   │   ├── train_v37_nova.py              Baseline model (RMSE ~780K)
+│   │   └── model_v55/                     SHAP plots, predictions, metrics
 │   ├── dataset/
-│   │   ├── sales_train.csv                 Du lieu huan luyen: 2012-2022
-│   │   └── sales_test.csv                  Du lieu kiem thu: 2023-2024
-│   ├── model_v6/                           SHAP plots, metrics, feature list
-│   ├── requirements.txt                    Thu vien kem phien ban cu the
-│   └── submission_v6.csv                   Ket qua du bao cuoi cung
+│   │   ├── sales_train.csv                Dữ liệu huấn luyện: 2012-2022
+│   │   └── sales_test.csv                 Dữ liệu kiểm thử: 2023-2024
+│   └── requirements.txt                   Thư viện kèm phiên bản cụ thể
 │
-├── Nop_bai/                            Tai lieu nop bai
-│   ├── NeurIPS_Report.tex                  Bao cao ky thuat (NeurIPS template, 4 trang)
-│   ├── NeurIPS_Report.pdf                  Ban PDF da compile
-│   ├── submission.csv                      File nop len Kaggle
-│   ├── Images/                             36 bieu do EDA va SHAP
-│   └── Bao_Cao_Chien_Luoc_*.md             Bao cao chien luoc toan dien
+├── Nop_bai/                            Tài liệu nộp bài
+│   ├── NeurIPS_Report.tex                 Báo cáo kỹ thuật (NeurIPS template)
+│   ├── NeurIPS_Report.pdf                 Bản PDF đã compile
+│   ├── submission_v55_m128.csv            🏆 File nộp lên Kaggle (RMSE=740,764)
+│   ├── Images/                            35+ biểu đồ EDA và SHAP
+│   └── Bao_Cao_Chien_Luoc_*.md           Báo cáo chiến lược toàn diện
 │
-├── Analysis/                           Scripts phan tich EDA
-├── baseline.ipynb                      Notebook kham pha du lieu
-└── README.md                           File nay
+├── Analysis/                           Scripts phân tích EDA
+├── baseline.ipynb                      Notebook khám phá dữ liệu
+└── README.md                           File này
 ```
 
 ---
 
-## Hieu Suat Mo Hinh
+## 🔬 SHAP — Giải Thích Mô Hình
 
-Mo hinh LightGBM Ensemble (5 seeds) duoc danh gia tren tap hold-out 18 thang (07/2021 - 12/2022):
+Top 5 features quan trọng nhất (SHAP TreeExplainer):
 
-| Chi so | Gia tri |
-|--------|:-------:|
-| R-squared | 0.7978 |
-| MAE | 531,042 |
-| RMSE | 698,857 |
-| MAPE | 21.1% |
-
-**Kien truc:** LightGBM GBDT voi log-transform, ensemble 5 random seeds, 40 dac trung "known-in-advance", ket hop SHAP TreeExplainer de giai thich ket qua du bao.
-
-**Chong ro ri du lieu:** Toan bo dac trung chi su dung thong tin co the biet truoc tai thoi diem du bao. Bien khuyen mai bi loai bo hoan toan. Lag features chi truy xuat tu tap huan luyen.
+| Rank | Feature | Ý nghĩa |
+|:----:|---------|---------|
+| 1 | `rev_doy_mean` | Trung bình doanh thu lịch sử theo ngày trong năm |
+| 2 | `time_idx` | Xu hướng tuyến tính (đếm ngày từ đầu train) |
+| 3 | `rev_lag_avg` | Trung bình lag 365 và 730 ngày |
+| 4 | `rev_lag_365` | Doanh thu cùng ngày năm trước |
+| 5 | `rev_woy_mean` | Trung bình doanh thu theo tuần trong năm |
 
 ---
 
-## Tai Lieu Tham Khao
+## 📋 Tài Liệu Tham Khảo
 
-1. Ke, G., et al. "LightGBM: A Highly Efficient Gradient Boosting Decision Tree." NeurIPS, 2017.
-2. Lundberg, S. M. & Lee, S.-I. "A Unified Approach to Interpreting Model Predictions (SHAP)." NeurIPS, 2017.
-3. VinTelligence. "De thi Datathon 2026 — Vong 1." 2026.
+1. Ke, G., et al. "LightGBM: A Highly Efficient Gradient Boosting Decision Tree." *NeurIPS*, 2017.
+2. Chen, T. & Guestrin, C. "XGBoost: A Scalable Tree Boosting System." *KDD*, 2016.
+3. Prokhorenkova, L., et al. "CatBoost: Unbiased Boosting with Categorical Features." *NeurIPS*, 2018.
+4. Lundberg, S. M. & Lee, S.-I. "A Unified Approach to Interpreting Model Predictions (SHAP)." *NeurIPS*, 2017.
+5. VinTelligence. "Đề thi Datathon 2026 — Vòng 1." 2026.
