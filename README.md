@@ -1,12 +1,12 @@
-# 🏆 Datathon 2026 — Vòng 1 | The Gridbreakers
+# Datathon 2026 — Vòng 1 | The Gridbreakers
 
 **Đề tài:** Dự báo Doanh thu (Revenue) và Giá vốn hàng bán (COGS) cho doanh nghiệp thời trang e-commerce Việt Nam.  
 **Cuộc thi:** Tổ chức bởi VinTelligence — VinUniversity DS&AI Club.  
-**Kết quả:** 🥇 **Public Leaderboard RMSE = 740,764**
+**Kết quả:** **Public Leaderboard RMSE = 740,764**
 
 ---
 
-## 🚀 Hướng Dẫn Tái Lập Kết Quả
+## Hướng Dẫn Tái Lập Kết Quả
 
 Toàn bộ pipeline có thể tái lập 100% bằng 3 dòng lệnh:
 
@@ -20,19 +20,19 @@ Random seeds cố định: `[42, 123, 777]` — đảm bảo kết quả giống
 
 ---
 
-## 📊 Hiệu Suất Mô Hình
+## Hiệu Suất Mô Hình
 
 | Mô hình | RMSE (Public LB) | Ghi chú |
 |---------|:-----------------:|---------|
 | Naive Baseline (DOY mean) | > 900K | Không có trend correction |
 | LightGBM đơn — V37 | 780K | 1 seed, 1 loss function |
-| **V55 Hybrid Ensemble** | **740,764** | **🏆 Best — 18 models × trend multiplier** |
+| **V55 Hybrid Ensemble** | **740,764** | **Best — 18 models × trend multiplier** |
 | V58 Deep Trees | 743K | Overfitting do deeper leaves |
 | V60 Ridge Hybrid | 769K | Trend ngoại suy sai do structural break |
 
 ---
 
-## 🏗️ Kiến Trúc Mô Hình — V55 Hybrid Ensemble
+## Kiến Trúc Mô Hình — V55 Hybrid Ensemble
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -95,21 +95,21 @@ COGS_t   = Revenue_t × clip(COGS_Ratio, 0.65, 0.95)
 
 ### Anti-Leakage
 
-- ✅ Revenue/COGS test **không bao giờ** xuất hiện trong features
-- ✅ Lag features chỉ truy xuất từ train set
-- ✅ Sample weights: `w = exp(-0.15 × (2023 - year))` — ưu tiên gần nhưng giữ seasonal dài hạn
-- ✅ Không dùng dữ liệu ngoài (chỉ `sales_train.csv`)
+- Revenue/COGS test **không bao giờ** xuất hiện trong features
+- Lag features chỉ truy xuất từ train set
+- Sample weights: `w = exp(-0.15 × (2023 - year))` — ưu tiên gần nhưng giữ seasonal dài hạn
+- Không dùng dữ liệu ngoài (chỉ `sales_train.csv`)
 
 ---
 
-## 📁 Cấu Trúc Thư Mục
+## Cấu Trúc Thư Mục
 
 ```
 datathon-2026-round-1/
 │
 ├── train_model/                        Pipeline học máy chính
 │   ├── scripts/
-│   │   ├── train_v55_ultimate.py          🏆 Best model — Hybrid Ensemble
+│   │   ├── train_v55_ultimate.py          Best model — Hybrid Ensemble
 │   │   ├── train_v37_nova.py              Baseline model (RMSE ~780K)
 │   │   └── model_v55/                     SHAP plots, predictions, metrics
 │   ├── dataset/
@@ -120,7 +120,7 @@ datathon-2026-round-1/
 ├── Nop_bai/                            Tài liệu nộp bài
 │   ├── NeurIPS_Report.tex                 Báo cáo kỹ thuật (NeurIPS template)
 │   ├── NeurIPS_Report.pdf                 Bản PDF đã compile
-│   ├── submission_v55_m128.csv            🏆 File nộp lên Kaggle (RMSE=740,764)
+│   ├── submission_v55_m128.csv            File nộp lên Kaggle (RMSE=740,764)
 │   ├── Images/                            35+ biểu đồ EDA và SHAP
 │   └── Bao_Cao_Chien_Luoc_*.md           Báo cáo chiến lược toàn diện
 │
@@ -131,7 +131,7 @@ datathon-2026-round-1/
 
 ---
 
-## 🔬 SHAP — Giải Thích Mô Hình
+## SHAP — Giải Thích Mô Hình
 
 Top 5 features quan trọng nhất (SHAP TreeExplainer):
 
@@ -145,7 +145,7 @@ Top 5 features quan trọng nhất (SHAP TreeExplainer):
 
 ---
 
-## 📋 Tài Liệu Tham Khảo
+## Tài Liệu Tham Khảo
 
 1. Ke, G., et al. "LightGBM: A Highly Efficient Gradient Boosting Decision Tree." *NeurIPS*, 2017.
 2. Chen, T. & Guestrin, C. "XGBoost: A Scalable Tree Boosting System." *KDD*, 2016.
