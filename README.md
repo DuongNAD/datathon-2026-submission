@@ -120,26 +120,31 @@ COGS_t   = Revenue_t × clip(COGS_Ratio, 0.65, 0.95)
 ```
 datathon-2026-round-1/
 │
-├── train_model/                        Pipeline học máy chính
+├── train_model/                           Pipeline học máy
 │   ├── scripts/
-│   │   ├── train_v55_ultimate.py          Best model — Hybrid Ensemble
-│   │   ├── train_v37_nova.py              Baseline model (RMSE ~780K)
-│   │   └── model_v55/                     SHAP plots, predictions, metrics
+│   │   ├── train_v55_ultimate.py             Best model (RMSE=740,764)
+│   │   ├── train_v62_precision.py            Precision tuning + COGS ensemble
+│   │   ├── train_v61_endgame.py              Hedge strategy (time-varying multiplier)
+│   │   ├── train_v37_nova.py                 Baseline LightGBM (RMSE~780K)
+│   │   ├── train_v6.py                       Initial pipeline (R²=0.80)
+│   │   ├── check_constraints.py              Kiểm tra ràng buộc đề thi
+│   │   └── evaluate.py                       Đánh giá mô hình trên validation
 │   ├── dataset/
-│   │   ├── sales_train.csv                Dữ liệu huấn luyện: 2012-2022
-│   │   └── sales_test.csv                 Dữ liệu kiểm thử: 2023-2024
-│   └── requirements.txt                   Thư viện kèm phiên bản cụ thể
+│   │   ├── sales_train.csv                   Dữ liệu huấn luyện (2012-2022)
+│   │   └── sales_test.csv                    Dữ liệu kiểm thử (2023-2024)
+│   └── requirements.txt                      Thư viện Python
 │
-├── Nop_bai/                            Tài liệu nộp bài
-│   ├── NeurIPS_Report.tex                 Báo cáo kỹ thuật (NeurIPS template)
-│   ├── NeurIPS_Report.pdf                 Bản PDF đã compile
-│   ├── submission_v55_m128.csv            File nộp lên Kaggle (RMSE=740,764)
-│   ├── Images/                            35+ biểu đồ EDA và SHAP
-│   └── Bao_Cao_Chien_Luoc_*.md           Báo cáo chiến lược toàn diện
+├── Nop_bai/                               Tài liệu nộp bài
+│   ├── NeurIPS_Report.tex                    Báo cáo kỹ thuật (NeurIPS template)
+│   ├── NeurIPS_Report.pdf                    Bản PDF đã compile
+│   ├── submission_v55_m128.csv               Best submission (RMSE=740,764)
+│   ├── Images/                               35+ biểu đồ EDA và SHAP
+│   └── Bao_Cao_*.md/pdf                      Báo cáo chiến lược toàn diện
 │
-├── Analysis/                           Scripts phân tích EDA
-├── baseline.ipynb                      Notebook khám phá dữ liệu
-└── README.md                           File này
+├── Analysis/                              Scripts phân tích EDA (25+ scripts)
+├── baseline.ipynb                         Notebook khám phá dữ liệu
+├── sample_submission.csv                  Template submission từ đề thi
+└── README.md                              File này
 ```
 
 ---
