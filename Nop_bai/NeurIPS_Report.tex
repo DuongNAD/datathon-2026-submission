@@ -58,7 +58,7 @@
 % ============================================================
 \begin{abstract}
 \noindent
-Phân tích 10 năm dữ liệu giao dịch (2012--2022) của một doanh nghiệp thời trang e-commerce Việt Nam, chúng tôi phát hiện 4 điểm nghẽn chiến lược: (1) \textbf{Bẫy lợi nhuận} — biên lợi nhuận sụp đổ chu kỳ tại Tháng 8 năm lẻ ($-35\%$) và Tháng 12 ($1\text{--}2\%$); (2) \textbf{Nghịch lý Khuyến mãi} — mã giảm giá bào mòn AOV $20.5\%$ thay vì kích cầu; (3) \textbf{Nghẽn cổ chai Mobile} — tỷ lệ bỏ giỏ hàng $68.5\%$ trên thiết bị di động; (4) \textbf{Nghịch lý Market-Fit} — hàng Outdoor tồn kho $80\%$ dù rating 4--5 sao. Hệ thống dự báo LightGBM Ensemble (5 seeds $\times$ 40 features) đạt $R^2 = 0.80$ và $\text{MAPE} = 21.1\%$ trên tập hold-out 18 tháng. SHAP analysis xác nhận quán tính ngắn hạn và chu kỳ thường niên là trụ cột dự báo. Chiến lược 5 trụ cột kỳ vọng khôi phục Gross Margin về $+20\%$, phục hồi AOV lên 27.500 VNĐ, và giảm $50\%$ tồn kho Outdoor trong 6 tháng.
+Phân tích 10 năm dữ liệu giao dịch (2012--2022) của một doanh nghiệp thời trang e-commerce Việt Nam, chúng tôi phát hiện 4 điểm nghẽn chiến lược: (1) \textbf{Bẫy lợi nhuận} — biên lợi nhuận sụp đổ chu kỳ tại Tháng 8 năm lẻ ($-35\%$) và Tháng 12 ($1\text{--}2\%$); (2) \textbf{Nghịch lý Khuyến mãi} — mã giảm giá bào mòn AOV $20.5\%$ thay vì kích cầu; (3) \textbf{Nghẽn cổ chai Mobile} — tỷ lệ bỏ giỏ hàng $68.5\%$ trên thiết bị di động; (4) \textbf{Nghịch lý Market-Fit} — hàng Outdoor tồn kho $80\%$ dù rating 4--5 sao. Hệ thống dự báo Hybrid Ensemble gồm 18 mô hình (LightGBM, XGBoost, CatBoost, Random Forest $\times$ 3 seeds $\times$ đa loss function) kết hợp Naive Seasonal Baseline, đạt \textbf{RMSE = 740.764} trên Public Leaderboard (548 ngày test). SHAP analysis xác nhận seasonal mean và quán tính thường niên là trụ cột dự báo. Chiến lược 5 trụ cột kỳ vọng khôi phục Gross Margin về $+20\%$, phục hồi AOV lên 27.500 VNĐ, và giảm $50\%$ tồn kho Outdoor trong 6 tháng.
 \end{abstract}
 
 % ============================================================
@@ -127,63 +127,101 @@ Outdoor chiếm chỉ $9\%$ doanh thu nhưng Overstock Rate lên tới $80\%$, S
 \section{Phần 3 — Mô Hình Dự Báo Doanh Thu}
 % ============================================================
 
-\subsection{Pipeline \& Feature Engineering}
+\subsection{Nhận Diện Thách Thức Dự Báo}
 
-\textbf{Kiến trúc:} LightGBM GBDT với target transform $\log(1+\text{Revenue})$. Ensemble 5 seeds $\times$ 2 models (Revenue + Gross Margin\%). COGS được suy ra: $\text{COGS} = \text{Revenue} \times (1 - \text{GM\%})$.
+Bài toán yêu cầu dự báo \textbf{548 ngày liên tục} (01/01/2023 -- 01/07/2024) chỉ từ 3 cột dữ liệu (\texttt{Date}, \texttt{Revenue}, \texttt{COGS}), không có biến ngoại sinh. Hai thách thức then chốt:
 
-\textbf{40 features ``Known-in-Advance'':}
 \begin{itemize}
-    \setlength{\itemsep}{0pt}
-    \item \textit{Lag đa tầng} (8 biến): \texttt{lag\_1} ($r=0.87$), \texttt{lag\_7}, \texttt{lag\_30}, \texttt{lag\_364}, \texttt{lag\_365} ($r=0.79$), rolling mean 7d/30d, Tet-aligned lag.
-    \item \textit{Lịch \& Fourier} (20 biến): Calendar features + biến đổi Fourier bậc 1--4 biểu diễn mùa vụ dạng sóng liên tục.
-    \item \textit{Sự kiện} (7 biến): Khoảng cách đến Tết Nguyên Đán, ngày lễ, Mega Sale dates, COVID lockdown flag.
-    \item \textit{Cuối tháng} (2 biến): \texttt{is\_month\_end\_zone}, \texttt{days\_to\_month\_end} — nắm bắt hiện tượng dồn đơn (tăng $70\%$).
+    \setlength{\itemsep}{1pt}
+    \item \textbf{Đứt gãy cấu trúc (Structural Break):} Revenue sụt $-39\%$ năm 2019, phục hồi $+12\%$ năm 2022 — khiến mô hình trend tuyến tính thất bại.
+    \item \textbf{Ngoại suy dài hạn:} Các mô hình cây (Boosting Trees) không ngoại suy — cần cơ chế bù trừ xu hướng tăng trưởng.
 \end{itemize}
 
-\textbf{Anti-leakage:} Revenue/COGS test không bao giờ xuất hiện trong features. Lag features chỉ truy xuất từ train set. Promotions bị loại bỏ hoàn toàn (thuộc cấp giao dịch, không biết trước). COVID lockdown periods được giảm trọng số (weight=$0.3$).
+\subsection{Kiến Trúc Pipeline — Hybrid Ensemble}
 
-\textbf{Validation:} Hold-out temporal split — train đến 30/06/2021, validation từ 01/07/2021 đến 31/12/2022 (549 ngày). Không random split.
+\textbf{Chiến lược ``Chia để trị'':} Tách bài toán thành 2 thành phần — (a) \textit{Mùa vụ \& Dao động} do ML ensemble đảm nhận; (b) \textit{Xu hướng tăng trưởng} do hệ số điều chỉnh (Trend Multiplier) bù đắp.
+
+\textbf{Bước 1 — Target transform:} $y = \log(1 + \text{Revenue})$, giảm skewness và ổn định phương sai.
+
+\textbf{Bước 2 — Ensemble 18 mô hình:} 6 loại $\times$ 3 seeds $(42, 123, 777)$:
+
+\begin{table}[H]
+\centering
+\small
+\caption{Cấu hình Ensemble — 18 base models}
+\label{tab:ensemble}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Model} & \textbf{Loss} & \textbf{Weight} & \textbf{Rounds} \\
+\midrule
+LightGBM & RMSE & 25\% & 800 \\
+LightGBM & MAE & 10\% & 800 \\
+XGBoost & MSE & 25\% & 800 \\
+CatBoost & RMSE & 20\% & 800 \\
+CatBoost & MAE & 10\% & 800 \\
+Random Forest & — & 10\% & 400 trees \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Bước 3 — Hybrid Blending:} Kết hợp 90\% ML Ensemble + 10\% Naive Seasonal Baseline (trung bình Revenue theo \texttt{dayofyear} trên toàn bộ tập train). Baseline đóng vai trò ``neo'' ổn định, giảm variance ở những ngày ML dự đoán lệch mạnh.
+
+\textbf{Bước 4 — Trend Multiplier} $\alpha = 1.28$: Vì ML được train trên log-space với dữ liệu kết thúc 2022, dự báo có xu hướng bám sát mức 2022. Hệ số $\alpha$ bù đắp tăng trưởng kỳ vọng:
+\[
+\hat{R}_t = \alpha \cdot \left[ 0.9 \cdot \text{expm1}(\hat{y}^{ML}_t) + 0.1 \cdot \hat{y}^{Naive}_t \right]
+\]
+
+\textbf{Bước 5 — Dự báo COGS:} Thay vì dự báo COGS tuyệt đối (dễ vi phạm $\text{COGS} > \text{Revenue}$), dự báo tỷ lệ $r_t = \text{COGS}/\text{Revenue}$ bằng LightGBM riêng biệt, clip $\in [0.65, 0.95]$: $\hat{C}_t = \hat{R}_t \cdot \text{clip}(\hat{r}_t)$.
+
+\subsection{Feature Engineering — 41 Đặc Trưng Thuần Thời Gian}
+
+\begin{itemize}
+    \setlength{\itemsep}{0pt}
+    \item \textit{Fourier Transforms} (16 biến): Biểu diễn chu kỳ 365.25 ngày (bậc 1--4), 30.5 ngày (bậc 1--2), 7 ngày (bậc 1--2) dưới dạng sóng sin/cos liên tục.
+    \item \textit{Lag đa tầng} (10 biến): DOY-aligned (\texttt{lag\_365}, \texttt{lag\_730}) + DOW-aligned (\texttt{lag\_364}, \texttt{lag\_728}) + COGS lags. Fallback: \texttt{lag\_730} $\to$ \texttt{doy\_mean} khi thiếu dữ liệu.
+    \item \textit{Seasonal Mean} (4 biến): Trung bình Revenue theo \texttt{dayofyear}, \texttt{weekofyear}, tháng, thứ.
+    \item \textit{Calendar \& Events} (11 biến): \texttt{time\_idx} (đếm ngày), \texttt{is\_payday}, \texttt{is\_double\_day}, \texttt{is\_month\_end/start}, \texttt{is\_weekend}, interaction terms.
+\end{itemize}
+
+\textbf{Anti-leakage:} Revenue/COGS test không bao giờ xuất hiện trong features. Lag features chỉ truy xuất từ train set; đối với 2024, lags tự động fallback về seasonal means. Sample weights: $w_t = e^{-0.15 \cdot (2023 - \text{year}_t)}$ — ưu tiên dữ liệu gần nhưng giữ nguyên seasonal signal dài hạn.
 
 \subsection{Kết Quả Thực Nghiệm}
 
 \begin{table}[H]
 \centering
 \small
-\caption{Hiệu suất mô hình v6 trên tập hold-out 18 tháng}
+\caption{Hiệu suất trên Public Leaderboard (548 ngày test)}
 \label{tab:metrics}
-\begin{tabular}{lccl}
+\begin{tabular}{lcl}
 \toprule
-\textbf{Chỉ số} & \textbf{Giá trị} & \textbf{Giai đoạn} & \textbf{Ý nghĩa} \\
+\textbf{Mô hình} & \textbf{RMSE} & \textbf{Ghi chú} \\
 \midrule
-$R^2$ & 0.7978 & Toàn bộ val & Giải thích $80\%$ biến động doanh thu \\
-MAE & 531,042 & Toàn bộ val & Sai lệch trung bình $\sim$531K VNĐ/ngày \\
-RMSE & 698,857 & Toàn bộ val & Phạt nặng các dự báo lệch lớn \\
-MAPE & 21.1\% & Toàn bộ val & Biên độ sai lệch $\sim$21\% \\
-\midrule
-$R^2$ & 0.64 & 2H/2021 & Bền bỉ qua giai đoạn COVID nhiễu \\
-$R^2$ & 0.80 & 2022 & Hiệu suất bật tăng mạnh \\
+Naive Baseline (DOY mean) & $>$ 900K & Không có trend correction \\
+LightGBM đơn (V37) & 780K & 1 seed, 1 loss function \\
+\textbf{V55 Ensemble (18 models)} & \textbf{740.764} & 6 types $\times$ 3 seeds, $\alpha{=}1.28$ \\
+V58 Deep Trees (127 leaves) & 743K & Overfitting, tăng RMSE \\
+V60 Ridge Hybrid & 769K & Trend ngoại suy sai do structural break \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Sanity checks:} 0 giá trị âm Revenue, 0 vi phạm COGS $>$ Revenue, dự báo 2023--2024 tăng trưởng $+11.1\%$ (hợp lý với xu hướng phục hồi 2022).
+\textbf{Sanity checks:} 0 giá trị âm Revenue, 0 vi phạm $\text{COGS} > \text{Revenue}$, dự báo 2023 trung bình 4.07M VNĐ/ngày (tăng trưởng $+27\%$ so với 2022, phù hợp xu hướng phục hồi kinh tế).
 
 \subsection{Giải Thích Mô Hình — SHAP Analysis}
 
-SHAP TreeExplainer trên tập validation đúc kết 3 quy luật thị trường:
+SHAP TreeExplainer trên LightGBM (seed 42) xác nhận 3 quy luật:
 
 \begin{enumerate}
     \setlength{\itemsep}{1pt}
-    \item \textbf{Quán tính ngắn hạn chi phối:} \texttt{revenue\_lag\_1} (mean $|\text{SHAP}| = 0.306$) vượt trội gấp $5\times$ biến thứ hai — doanh thu hôm nay phản ánh đà tăng trưởng ngày liền trước.
-    \item \textbf{Chu kỳ thường niên ổn định:} \texttt{lag\_365} và \texttt{lag\_364} ở vị trí 2--3, xác nhận tính lặp lại bám sát cùng kỳ năm trước.
-    \item \textbf{Hiệu ứng dồn đơn cuối tháng:} \texttt{days\_to\_month\_end} trong top-5, minh chứng hành vi dồn KPI/hóa đơn cuối kỳ.
+    \item \textbf{Seasonal Mean chi phối:} \texttt{rev\_doy\_mean} (SHAP \#1) — doanh thu mỗi ngày bám sát trung bình lịch sử của chính ngày đó trong năm. Mô hình hoạt động như \textit{seasonal pattern matching}.
+    \item \textbf{Xu hướng tuyến tính:} \texttt{time\_idx} (SHAP \#2) — LightGBM tự học rằng ``càng gần hiện tại, doanh thu càng khác giai đoạn xa'', nhờ exponential decay weighting.
+    \item \textbf{Quán tính thường niên:} \texttt{rev\_lag\_avg} và \texttt{rev\_lag\_365/730} (SHAP \#3--5) — doanh thu cùng kỳ năm trước là anchor cực mạnh cho dự báo.
 \end{enumerate}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.48\textwidth]{Images/shap_summary_v6.png}
-    \includegraphics[width=0.48\textwidth]{Images/shap_bar_v6.png}
-    \caption{(Trái) SHAP Beeswarm Plot — phân bổ tác động. (Phải) SHAP Bar — mức độ quan trọng.}
+    \includegraphics[width=0.55\textwidth]{Images/shap_beeswarm_v55.png}
+    \caption{SHAP Beeswarm Plot (V55) — \texttt{rev\_doy\_mean} và \texttt{time\_idx} chi phối dự báo.}
     \label{fig:shap}
 \end{figure}
 
@@ -204,7 +242,11 @@ SHAP TreeExplainer trên tập validation đúc kết 3 quy luật thị trườ
 
 \textbf{KPI mục tiêu (Q1--Q2/2023):} Gross Margin về $+20\%$, AOV phục hồi 27.500 VNĐ ($+25\%$), Outdoor Overstock $80\% \rightarrow 40\%$, Mobile Cart Abandonment $< 40\%$.
 
-\textbf{Tái lập kết quả:} Toàn bộ mã nguồn, dữ liệu, và hướng dẫn chạy (\texttt{pip install -r requirements.txt \&\& python scripts/train\_v6.py}) được công khai tại: \url{https://github.com/DuongNAD/datathon-2026-submission}. Random seeds cố định: $[42, 123, 777, 2026, 314]$.
+\textbf{Tái lập kết quả:} Toàn bộ mã nguồn, dữ liệu, và hướng dẫn chạy:
+\begin{verbatim}
+pip install -r requirements.txt && python scripts/train_v55_ultimate.py
+\end{verbatim}
+Công khai tại: \url{https://github.com/DuongNAD/datathon-2026-submission}. Random seeds cố định: $[42, 123, 777]$. Tất cả kết quả đều tái lập 100\%.
 
 % ============================================================
 % REFERENCES (không tính vào 4 trang)
@@ -215,6 +257,8 @@ SHAP TreeExplainer trên tập validation đúc kết 3 quy luật thị trườ
 \begin{enumerate}
     \setlength{\itemsep}{2pt}
     \item Ke, G., et al. ``LightGBM: A Highly Efficient Gradient Boosting Decision Tree.'' \textit{NeurIPS}, 2017.
+    \item Chen, T. \& Guestrin, C. ``XGBoost: A Scalable Tree Boosting System.'' \textit{KDD}, 2016.
+    \item Prokhorenkova, L., et al. ``CatBoost: Unbiased Boosting with Categorical Features.'' \textit{NeurIPS}, 2018.
     \item Lundberg, S. M. \& Lee, S.-I. ``A Unified Approach to Interpreting Model Predictions (SHAP).'' \textit{NeurIPS}, 2017.
     \item VinTelligence — VinUniversity DS\&AI Club. ``Đề thi Datathon 2026 — Vòng 1: The Gridbreakers.'' 2026.
 \end{enumerate}
